@@ -42,14 +42,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       </details>
     </header>
     <script type="module">
-      import {WebXRButton} from './js/util/webxr-button.js';
-      import {Scene} from './js/render/scenes/scene.js';
-      import {Renderer, createWebGLContext} from './js/render/core/renderer.js';
-      import {Node} from './js/render/core/node.js';
-      import {Gltf2Node} from './js/render/nodes/gltf2.js';
-      import {DropShadowNode} from './js/render/nodes/drop-shadow.js';
-      import {vec3} from './js/render/math/gl-matrix.js';
-      import {Ray} from './js/render/math/ray.js';
+      import { WebXRButton } from './js/util/webxr-button.js';
+      import { Scene } from './js/render/scenes/scene.js';
+      import { Renderer, createWebGLContext } from './js/render/core/renderer.js';
+      import { Node } from './js/render/core/node.js';
+      import { Gltf2Node } from './js/render/nodes/gltf2.js';
+      import { DropShadowNode } from './js/render/nodes/drop-shadow.js';
+      import { vec3 } from './js/render/math/gl-matrix.js';
+      import { Ray } from './js/render/math/ray.js';
 
       // XR globals.
       let xrButton = null;
@@ -67,10 +67,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       arObject.visible = false;
       scene.addNode(arObject);
 
-      let flower = new Gltf2Node({url: 'media/gltf/sunflower/sunflower.gltf'});
-      arObject.addNode(flower);
-
-      let reticle = new Gltf2Node({url: 'media/gltf/reticle/reticle.gltf'});
+      let reticle = new Gltf2Node({ url: 'media/gltf/reticle/reticle.gltf' });
       reticle.visible = false;
       scene.addNode(reticle);
 
@@ -86,6 +83,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       // Ensure the background is transparent for AR.
       scene.clear = false;
 
+      const modelUrls = [
+        'media/gltf/sunflower/sunflower.gltf',
+        'media/gltf/cow/cow.gltf'
+      ];
+
+      let currentModelIndex = 0;
+
       function initXR() {
         xrButton = new WebXRButton({
           onRequestSession: onRequestSession,
@@ -98,18 +102,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
         if (navigator.xr) {
           navigator.xr.isSessionSupported('immersive-ar')
-                      .then((supported) => {
-            xrButton.enabled = supported;
-          });
+            .then((supported) => {
+              xrButton.enabled = supported;
+            });
         }
       }
 
       function onRequestSession() {
-        return navigator.xr.requestSession('immersive-ar', {requiredFeatures: ['local', 'hit-test']})
-                           .then((session) => {
-          xrButton.setSession(session);
-          onSessionStarted(session);
-        });
+        return navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['local', 'hit-test'] })
+          .then((session) => {
+            xrButton.setSession(session);
+            onSessionStarted(session);
+          });
       }
 
       function onSessionStarted(session) {
@@ -162,17 +166,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         let newFlower = arObject.clone();
         newFlower.visible = true;
         newFlower.matrix = matrix;
+        // Use the model URL based on the current index.
+        newFlower.addNode(new Gltf2Node({ url: modelUrls[currentModelIndex] }));
         scene.addNode(newFlower);
 
         flowers.push(newFlower);
 
-        // For performance reasons if we add too many objects start
-        // removing the oldest ones to keep the scene complexity
-        // from growing too much.
         if (flowers.length > MAX_FLOWERS) {
           let oldFlower = flowers.shift();
           scene.removeNode(oldFlower);
         }
+
+        // Increment the model index, cycling through the array.
+        currentModelIndex = (currentModelIndex + 1) % modelUrls.length;
       }
 
       let rayOrigin = vec3.create();
@@ -180,7 +186,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       function onSelect(event) {
         if (reticle.visible) {
           // The reticle should already be positioned at the latest hit point, 
-          // so we can just use it's matrix to save an unnecessary call to 
+          // so we can just use its matrix to save an unnecessary call to 
           // event.frame.getHitTestResults.
           addARObjectAt(reticle.matrix);
         }

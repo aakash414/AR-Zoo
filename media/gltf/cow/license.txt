@@ -1,0 +1,11 @@
+Model Information:
+* title:	Toro
+* source:	https://sketchfab.com/3d-models/toro-b4cb2266b1154c578851d49a03cb5eb0
+* author:	Antonio Rossini (https://sketchfab.com/Rox3d)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Toro" (https://sketchfab.com/3d-models/toro-b4cb2266b1154c578851d49a03cb5eb0) by Antonio Rossini (https://sketchfab.com/Rox3d) licensed under SKETCHFAB Standard (https://sketchfab.com/licenses)
