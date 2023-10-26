@@ -85,10 +85,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       const modelUrls = [
         'media/gltf/sunflower/sunflower.gltf',
-        'media/gltf/headset/headset.gltf'
+        'media/gltf/cow/cow.gltf'
       ];
 
       let currentModelIndex = 0;
+      let currentModel = null;
 
       function initXR() {
         xrButton = new WebXRButton({
@@ -116,7 +117,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           });
       }
 
-      function onSessionStarted(session) {
+      async function onSessionStarted(session) {
         session.addEventListener('end', onSessionEnded);
         session.addEventListener('select', onSelect);
 
@@ -146,6 +147,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         session.requestReferenceSpace('local').then((refSpace) => {
           xrRefSpace = refSpace;
 
+          // Load the current model.
+          currentModel = await loadModel(modelUrls[currentModelIndex]);
+
           session.requestAnimationFrame(onXRFrame);
         });
       }
@@ -160,33 +164,46 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         xrButton.setSession(null);
       }
 
-      // Adds a new object to the scene at the
-      // specified transform.
+      async function loadModel(url) {
+        return new Promise((resolve, reject) => {
+          const model = new Gltf2Node({ url });
+          model.on('load', () => {
+            resolve(model);
+          });
+          model.on('error', (err) => {
+            reject(err);
+          });
+        });
+      }
+
+      // Adds a new object to the scene at the specified transform.
       function addARObjectAt(matrix) {
-        let newFlower = arObject.clone();
-        newFlower.visible = true;
-        newFlower.matrix = matrix;
-        // Use the model URL based on the current index.
-        newFlower.addNode(new Gltf2Node({ url: modelUrls[currentModelIndex] }));
-        scene.addNode(newFlower);
+        if (currentModel) {
+          let newFlower = arObject.clone();
+          newFlower.visible = true;
+          newFlower.matrix = matrix;
+          newFlower.addNode(currentModel);
+          scene.addNode(newFlower);
 
-        flowers.push(newFlower);
+          flowers.push(newFlower);
 
-        if (flowers.length > MAX_FLOWERS) {
-          let oldFlower = flowers.shift();
-          scene.removeNode(oldFlower);
+          if (flowers.length > MAX_FLOWERS) {
+            let oldFlower = flowers.shift();
+            scene.removeNode(oldFlower);
+          }
+
+          // Toggle the current model for the next click.
+          currentModelIndex = (currentModelIndex + 1) % modelUrls.length;
+          currentModel = null;
         }
-
-        // Increment the model index, cycling through the array.
-        currentModelIndex = (currentModelIndex + 1) % modelUrls.length;
       }
 
       let rayOrigin = vec3.create();
       let rayDirection = vec3.create();
       function onSelect(event) {
         if (reticle.visible) {
-          // The reticle should already be positioned at the latest hit point, 
-          // so we can just use its matrix to save an unnecessary call to 
+          // The reticle should already be positioned at the latest hit point,
+          // so we can just use its matrix to save an unnecessary call to
           // event.frame.getHitTestResults.
           addARObjectAt(reticle.matrix);
         }
