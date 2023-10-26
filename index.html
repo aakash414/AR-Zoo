@@ -67,6 +67,16 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       arObject.visible = false;
       scene.addNode(arObject);
 
+
+      const objectsToPlace = [
+  { url: 'media/gltf/sunflower/sunflower.gltf' },
+  { url: 'media/gltf/controller/controller.gltf' },
+  { url: 'media/gltf/headset/headset.gltf' }
+  // Add more objects as needed
+];
+
+let currentObjectIndex = 0;
+
       let flower = new Gltf2Node({url: 'media/gltf/sunflower/sunflower.gltf'});
       arObject.addNode(flower);
 
@@ -158,6 +168,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
       // Adds a new object to the scene at the
       // specified transform.
+      /*
       function addARObjectAt(matrix) {
         let newFlower = arObject.clone();
         newFlower.visible = true;
@@ -174,9 +185,32 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           scene.removeNode(oldFlower);
         }
       }
+      */
+
+  function addARObjectAt(matrix, objectUrl) {
+  let newObject = arObject.clone();
+  newObject.visible = true;
+  newObject.matrix = matrix;
+
+  let objectNode = new Gltf2Node({ url: objectUrl });
+  newObject.addNode(objectNode);
+
+  scene.addNode(newObject);
+  flowers.push(newObject);
+
+  // For performance reasons if we add too many objects start
+  // removing the oldest ones to keep the scene complexity
+  // from growing too much.
+  if (flowers.length > MAX_FLOWERS) {
+    let oldObject = flowers.shift();
+    scene.removeNode(oldObject);
+  }
+}
+
 
       let rayOrigin = vec3.create();
       let rayDirection = vec3.create();
+      /*
       function onSelect(event) {
         if (reticle.visible) {
           // The reticle should already be positioned at the latest hit point, 
@@ -185,6 +219,19 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
           addARObjectAt(reticle.matrix);
         }
       }
+      */
+      function onSelect(event) {
+  if (reticle.visible) {
+    const selectedObject = objectsToPlace[currentObjectIndex];
+    addARObjectAt(reticle.matrix, selectedObject.url);
+
+    // Cycle to the next object in the array
+    currentObjectIndex = (currentObjectIndex + 1) % objectsToPlace.length;
+  }
+}
+
+
+
 
       // Called every time a XRSession requests that a new frame be drawn.
       function onXRFrame(t, frame) {
