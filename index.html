@@ -80,6 +80,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   const MAX_FLOWERS = 10;
   let flowers = [];
 
+  
+
   // Ensure the background is transparent for AR.
   scene.clear = false;
 
@@ -96,24 +98,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       onEndSession: onEndSession,
       textEnterXRTitle: "START AR",
       textXRNotFoundTitle: "AR NOT FOUND",
-      textExitXRTitle: "EXIT AR",
+      textExitXRTitle: "EXIT  AR",
     });
     document.querySelector('header').appendChild(xrButton.domElement);
 
     if (navigator.xr) {
       navigator.xr.isSessionSupported('immersive-ar')
-        .then((supported) => {
-          xrButton.enabled = supported;
-        });
+              .then((supported) => {
+                xrButton.enabled = supported;
+              });
     }
   }
 
   function onRequestSession() {
     return navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['local', 'hit-test'] })
-      .then((session) => {
-        xrButton.setSession(session);
-        onSessionStarted(session);
-      });
+            .then((session) => {
+              xrButton.setSession(session);
+              onSessionStarted(session);
+            });
   }
 
   function onSessionStarted(session) {
@@ -161,8 +163,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   }
 
   const modelYouTubeLinks = {
-    'media/gltf/sunflower/sunflower.gltf': 'https://www.youtube.com/watch?v=P_ckAbOr0r4',
-    'media/gltf/elephant.glb': 'https://www.youtube.com/watch?v=Aw6GkiCvcWs',
+    'media/gltf/sunflower/sunflower.gltf': 'https://www.youtube.com/watch?v=sunflower_video',
+    'media/gltf/elephant.glb': 'https://www.youtube.com/watch?v=elephant_video',
     // Add more models and their YouTube links here
   };
 
@@ -199,8 +201,42 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     currentModelIndex = (currentModelIndex + 1) % modelUrls.length;
   }
 
-  // Initialize click listeners for models.
-  initModelClickListeners();
+    // Initialize click listeners for models.
+    initModelClickListeners();
+  }
+
+  // Modify the onSelect function to check for model selection.
+  function onSelect(event) {
+    if (reticle.visible) {
+      for (let model of flowers) {
+        const modelMatrix = model.matrix;
+        // Check if the reticle is over the model by comparing matrices.
+        if (mat4.equals(modelMatrix, reticle.matrix)) {
+          // Redirect to the associated YouTube link.
+          const modelURL = model.getUrl();
+          const youtubeLink = modelYouTubeLinks[modelURL];
+          if (youtubeLink) {
+            window.location.href = youtubeLink;
+          }
+          return;
+        }
+      }
+      // If not over a model, add the model as before.
+      addARObjectAt(reticle.matrix);
+    }
+  }
+
+
+  let rayOrigin = vec3.create();
+  let rayDirection = vec3.create();
+  function onSelect(event) {
+    if (reticle.visible) {
+      // The reticle should already be positioned at the latest hit point,
+      // so we can just use its matrix to save an unnecessary call to
+      // event.frame.getHitTestResults.
+      addARObjectAt(reticle.matrix);
+    }
+  }
 
   // Called every time a XRSession requests that a new frame be drawn.
   function onXRFrame(t, frame) {
