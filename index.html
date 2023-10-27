@@ -77,7 +77,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   vec3.set(shadow.scale, 0.15, 0.15, 0.15);
   arObject.addNode(shadow);
 
-  const MAX_FLOWERS = 30;
+  const MAX_FLOWERS = 10;
   let flowers = [];
 
   // Ensure the background is transparent for AR.
@@ -96,24 +96,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
       onEndSession: onEndSession,
       textEnterXRTitle: "START AR",
       textXRNotFoundTitle: "AR NOT FOUND",
-      textExitXRTitle: "EXIT  AR",
+      textExitXRTitle: "EXIT AR",
     });
     document.querySelector('header').appendChild(xrButton.domElement);
 
     if (navigator.xr) {
       navigator.xr.isSessionSupported('immersive-ar')
-              .then((supported) => {
-                xrButton.enabled = supported;
-              });
+        .then((supported) => {
+          xrButton.enabled = supported;
+        });
     }
   }
 
   function onRequestSession() {
     return navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['local', 'hit-test'] })
-            .then((session) => {
-              xrButton.setSession(session);
-              onSessionStarted(session);
-            });
+      .then((session) => {
+        xrButton.setSession(session);
+        onSessionStarted(session);
+      });
   }
 
   function onSessionStarted(session) {
@@ -160,6 +160,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     xrButton.setSession(null);
   }
 
+  const modelYouTubeLinks = {
+    'media/gltf/sunflower/sunflower.gltf': 'https://www.youtube.com/watch?v=P_ckAbOr0r4',
+    'media/gltf/elephant.glb': 'https://www.youtube.com/watch?v=Aw6GkiCvcWs',
+    // Add more models and their YouTube links here
+  };
+
+  function initModelClickListeners() {
+    for (let model of flowers) {
+      model.onClick = function () {
+        const modelURL = model.getUrl();
+        const youtubeLink = modelYouTubeLinks[modelURL];
+        if (youtubeLink) {
+          window.location.href = youtubeLink;
+        }
+      };
+    }
+  }
+
   // Adds a new object to the scene at the
   // specified transform.
   function addARObjectAt(matrix) {
@@ -181,16 +199,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     currentModelIndex = (currentModelIndex + 1) % modelUrls.length;
   }
 
-  let rayOrigin = vec3.create();
-  let rayDirection = vec3.create();
-  function onSelect(event) {
-    if (reticle.visible) {
-      // The reticle should already be positioned at the latest hit point,
-      // so we can just use its matrix to save an unnecessary call to
-      // event.frame.getHitTestResults.
-      addARObjectAt(reticle.matrix);
-    }
-  }
+  // Initialize click listeners for models.
+  initModelClickListeners();
 
   // Called every time a XRSession requests that a new frame be drawn.
   function onXRFrame(t, frame) {
