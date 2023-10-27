@@ -80,8 +80,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   const MAX_FLOWERS = 10;
   let flowers = [];
 
-  
-
   // Ensure the background is transparent for AR.
   scene.clear = false;
 
@@ -162,24 +160,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     xrButton.setSession(null);
   }
 
-  const modelYouTubeLinks = {
-    'media/gltf/sunflower/sunflower.gltf': 'https://www.youtube.com/watch?v=sunflower_video',
-    'media/gltf/elephant.glb': 'https://www.youtube.com/watch?v=elephant_video',
-    // Add more models and their YouTube links here
-  };
-
-  function initModelClickListeners() {
-    for (let model of flowers) {
-      model.onClick = function () {
-        const modelURL = model.getUrl();
-        const youtubeLink = modelYouTubeLinks[modelURL];
-        if (youtubeLink) {
-          window.location.href = youtubeLink;
-        }
-      };
-    }
-  }
-
   // Adds a new object to the scene at the
   // specified transform.
   function addARObjectAt(matrix) {
@@ -200,32 +180,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     // Increment the model index, cycling through the array.
     currentModelIndex = (currentModelIndex + 1) % modelUrls.length;
   }
-
-    // Initialize click listeners for models.
-    initModelClickListeners();
-  }
-
-  // Modify the onSelect function to check for model selection.
-  function onSelect(event) {
-    if (reticle.visible) {
-      for (let model of flowers) {
-        const modelMatrix = model.matrix;
-        // Check if the reticle is over the model by comparing matrices.
-        if (mat4.equals(modelMatrix, reticle.matrix)) {
-          // Redirect to the associated YouTube link.
-          const modelURL = model.getUrl();
-          const youtubeLink = modelYouTubeLinks[modelURL];
-          if (youtubeLink) {
-            window.location.href = youtubeLink;
-          }
-          return;
-        }
-      }
-      // If not over a model, add the model as before.
-      addARObjectAt(reticle.matrix);
-    }
-  }
-
 
   let rayOrigin = vec3.create();
   let rayDirection = vec3.create();
@@ -264,6 +218,44 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
     scene.endFrame();
   }
+   
+   // Adds a new object to the scene at the specified transform.
+   function addARObjectAt(matrix) {
+    let newFlower = arObject.clone();
+    newFlower.visible = true;
+    newFlower.matrix = matrix;
+    // Use the model URL based on the current index.
+    newFlower.addNode(new Gltf2Node({ url: modelUrls[currentModelIndex] }));
+    scene.addNode(newFlower);
+
+    flowers.push(newFlower);
+
+    if (flowers.length > MAX_FLOWERS) {
+      let oldFlower = flowers.shift();
+      scene.removeNode(oldFlower);
+    }
+
+    // Increment the model index, cycling through the array.
+    currentModelIndex = (currentModelIndex + 1) % modelUrls.length;
+  }
+
+  // Function to handle the redirection to YouTube.
+  function redirectToYouTube(modelIndex) {
+    const youtubeLinks = [
+      'https://www.youtube.com/watch?v=elephant_video_link',
+      'https://www.youtube.com/watch?v=sunflower_video_link',
+      // Add more YouTube links for other models here
+    ];
+
+    if (modelIndex >= 0 && modelIndex < youtubeLinks.length) {
+      window.open(youtubeLinks[modelIndex]);
+    }
+  }
+
+  // Add a click event listener to arObject for redirection to YouTube.
+  arObject.addEventListener('click', () => {
+    redirectToYouTube(currentModelIndex);
+  });
 
   // Start the XR application.
   initXR();
